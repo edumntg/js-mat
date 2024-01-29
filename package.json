@@ -1,0 +1,42 @@
+{
+  "name": "js-mat",
+  "version": "1.5.0",
+  "description": "JavaScript library for Matrix representation",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc index.ts & jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edumntg/matrix-npm-package.git"
+  },
+  "keywords": [
+    "Matrix",
+    "Math",
+    "Inverse",
+    "Cofactor",
+    "Determinant",
+    "Algebra",
+    "Science"
+  ],
+  "author": "Eduardo Montilva",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/edumntg/matrix-npm-package/issues"
+  },
+  "homepage": "https://github.com/edumntg/matrix-npm-package#readme",
+  "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@babel/preset-typescript": "^7.23.3",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.2.5",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2"
+  },
+  "dependencies": {
+    "assert": "^2.0.0"
+  }
+}
