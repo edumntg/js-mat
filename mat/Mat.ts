@@ -1,22 +1,34 @@
 import {strict as assert} from 'assert';
 
 export namespace mat {
+
     export class Matrix {
+        /**
+         * Represents a Matrix
+         */
         arr: number[][] = [];
         nrows: number = 0;
         ncols: number = 0;
         static MIN_DET: number = 1e-9; // Min. value of a matrix's determinant to be considered singular
 
+        /**
+         * Constructs a new Matrix object
+         * @param m (nullable): Matrix or 2D array of numbers
+         */
         constructor(m: null | Matrix | number[][]) {
             if(m instanceof Matrix) {
-                this.construct_fromM(m);
+                this.construct_fromMatrix(m);
             } else if(Array.isArray(m)) {
-                this.construct_fromArr(m);
+                this.construct_fromArray(m);
             } else {
                 this.construct_empty();
             }
         }
 
+        /**
+         * Constructs an empty matrix
+         * @private
+         */
         private construct_empty(): Matrix {
             this.arr = [];
             this.nrows = 0;
@@ -25,7 +37,13 @@ export namespace mat {
             return this;
         }
 
-        private construct_fromM(m: Matrix): Matrix {
+        /**
+         * Construct a new Matrix object from an existing Matrix object
+         * This one basically creates a copy of the given matrix
+         * @param m: Matrix
+         * @private
+         */
+        private construct_fromMatrix(m: Matrix): Matrix {
 
             this.arr = m.arr.slice();
             this.nrows = m.nrows;
@@ -33,8 +51,16 @@ export namespace mat {
             return this;
         }
 
-        private construct_fromArr(arr: number[][]): Matrix {
+        /**
+         * Creates a new Matrix object from a 2D array of numbers
+         * @param arr: 2D array of numbers
+         * @private
+         */
+        private construct_fromArray(arr: number[][]): Matrix {
+            // Check that given argument is an array
             assert(Array.isArray(arr), "Argument must be of array type");
+            // Check that the array contains numbers only
+            assert(arr.every(item => item.every(x => typeof(x) === 'number')), "Argument must be an array of numbers");
 
             // get size
             let rows: number = arr.length;
@@ -47,25 +73,38 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Returns true if matrix is square
+         */
         isSquare(): boolean {
             return this.nrows === this.ncols;
         }
 
+        /**
+         * Returns true if matrix is singular (i.e: determinant close to zero)
+         */
         isSingular(): boolean {
             return this.det() <= Matrix.MIN_DET;
         }
 
-        multiply(param: Matrix | number): Matrix {
-            if(param instanceof Matrix) {
-                return this.matmul(param);
-            } else if(typeof(param) === 'number') {
-                return this.kmatmul(param);
+        /**
+         * Performs matrix-matrix multiplication and scalar-matrix multiplication
+         * @param multiplier: Scalar or Matrix object
+         */
+        multiply(multiplier: Matrix | number): Matrix {
+            if(multiplier instanceof Matrix) {
+                return this.matmul(multiplier);
+            } else if(typeof(multiplier) === 'number') {
+                return this.kmatmul(multiplier);
             } else {
-                console.log("Parameter given for multiplication is invalid");
-                return empty();
+                throw new Error("Parameter given for multiplication is invalid.");
             }
         }
 
+        /**
+         * Peforms matrix-matrix multiplication only
+         * @param m: Matrix object
+         */
         matmul(m: Matrix): Matrix {
             // get shape of each matrix to validate their dimensions
             let rows1: number = this.nrows;
@@ -73,6 +112,7 @@ export namespace mat {
             let rows2: number  = m.nrows;
             let cols2: number  = m.ncols;
 
+            // Check that shapes of matrices are valid
             assert(cols1 === rows2, `Invalid matrices dimensions. Got [${this.shape}]x[${m.shape}]`);
 
             // Create empty matrix to store result
@@ -90,11 +130,16 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Performs scalar-matrix multiplication only
+         * @param k
+         */
         kmatmul(k: number): Matrix {
-            console.assert(typeof(k) === 'number', "Argument must be a constant");
+            // Check that multiplier is a number
+            assert(typeof(k) === 'number', "Argument must be a constant");
 
             // create a copy
-            let copy: Matrix = fromMatrix(this);
+            let copy: Matrix = new Matrix(this);
 
             // Multiply
             let rows: number = copy.nrows;
@@ -105,6 +150,10 @@ export namespace mat {
             return copy;
         }
 
+        /**
+         * Performs matrix addition
+         * @param M: Matrix object
+         */
         add(M: Matrix): Matrix {
             // Check that both matrices have the same size
             assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
@@ -122,6 +171,10 @@ export namespace mat {
             return result;
         }
 
+        /**
+         * Performs matrix subtraction
+         * @param M: Matrix object
+         */
         sub(M: Matrix): Matrix {
             // Check that both matrices have the same size
             assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
@@ -147,6 +200,10 @@ export namespace mat {
             return this.sub(M);
         }
 
+        /**
+         * Returns requested row as a 1D array of numbers
+         * @param rowIndex: Index of row
+         */
         getRow(rowIndex: number): number[] {
             assert(rowIndex >= 0 && rowIndex < this.nrows, "Invalid row index");
             let row: number | number[] = this.arr[rowIndex];
@@ -156,9 +213,19 @@ export namespace mat {
             return row;
         }
 
+        /**
+         * Changes rowIndex-th row of the Matrix
+         * @param rowIndex: Row index
+         * @param row: Row (array)
+         */
         setRow(rowIndex: number, row: number[]): Matrix {
+            // Check that rowIndex is valid
             assert(rowIndex >= 0 && rowIndex < this.nrows, "Invalid row index");
+            // Check that given row is an array
             assert(Array.isArray(row), "Row parameter must be an array of numbers");
+            // Check that row is a 1D array
+            assert(row.every(item => typeof(item) === 'number'), "Row parameter must be a 1D array");
+            // Check that new row has a valid size
             assert(this.ncols === row.length, "New row must have the same number of columns")
 
             // set row
@@ -169,8 +236,14 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Returns requested column as a 1D array of numbers
+         * @param columnIndex: Index of column
+         */
         getColumn(columnIndex: number): number[] {
+            // Validate column index
             assert(columnIndex >= 0 && columnIndex < this.ncols, "Invalid column index");
+
             let column: number[] = [];
             // Insert values from column
             for(let i = 0; i < this.nrows; i++) {
@@ -179,10 +252,19 @@ export namespace mat {
 
             return column;
         }
-
+        /**
+         * Changes columnIndex-th column of the Matrix
+         * @param columnIndex: Column index
+         * @param column: Column (array)
+         */
         setColumn(columnIndex: number, column: number[]): Matrix {
+            // Validate column index
             assert(columnIndex >= 0 && columnIndex < this.ncols, "Invalid column index");
-            assert(Array.isArray(column), "Column must be aan array");
+            // Check that column is an array
+            assert(Array.isArray(column), "Column must be an array");
+            // Check that column contains numbers only
+            assert(column.every(item => typeof(item) === 'number'), "New column must contains numbers only.");
+            // Check that column has a valid length
             assert(column.length === this.nrows, "New column must have the same number of rows");
 
             // set column
@@ -193,34 +275,55 @@ export namespace mat {
             return this;
         }
 
-        set(row: number, column: number, value: number): Matrix {
-            assert(typeof(row) === 'number' && row >= 0 && row < this.nrows, "Invalid row index");
-            assert(typeof(column) === 'number' && column >= 0 && column < this.ncols, "Invalid column index");
+        /**
+         * Set (rowIndex, columnIndex)-th element in the Matrix
+         * @param rowIndex: Row index
+         * @param columnIndex: Column indeex
+         * @param value: Value to set
+         */
+        set(rowIndex: number, columnIndex: number, value: number): Matrix {
+            assert(typeof(rowIndex) === 'number' && rowIndex >= 0 && rowIndex < this.nrows, "Invalid row index");
+            assert(typeof(columnIndex) === 'number' && columnIndex >= 0 && columnIndex < this.ncols, "Invalid column index");
 
-            // @ts-ignore
-            this.arr[row][column] = value;
+            this.arr[rowIndex][columnIndex] = value;
 
             return this;
         }
 
-        get(row: number, column: number): number {
-            assert(typeof(row) === 'number' && row >= 0 && row < this.nrows, "Invalid row index");
-            assert(typeof(column) === 'number' && column >= 0 && column < this.ncols, "Invalid column index");
+        /**
+         * Returns (rowIndex, columnIndex)-th element in the Matrix
+         * @param rowIndex: Row index
+         * @param columnIndex: Column index
+         */
+        get(rowIndex: number, columnIndex: number): number {
+            assert(typeof(rowIndex) === 'number' && rowIndex >= 0 && rowIndex < this.nrows, "Invalid row index");
+            assert(typeof(columnIndex) === 'number' && columnIndex >= 0 && columnIndex < this.ncols, "Invalid column index");
 
-            // @ts-ignore
-            return this.arr[row][column];
+            return this.arr[rowIndex][columnIndex];
         }
 
+        /**
+         * Returns the number of elements in the matrix
+         */
         size(): number {
             return this.shape[0]*this.shape[1];
         }
 
+        /**
+         * Returns an array of 2 elements containing the size of the matrix.
+         * The array contains: [number of rows, number of columns]
+         */
         get shape(): number[] {
             return [this.nrows, this.ncols];
         }
 
+        /**
+         * Computes and returns the determinant of the matrix
+         */
         det(): number {
+            // Check if matrix is square
             assert(this.nrows === this.ncols, "Matrix is not square");
+
             if(this.nrows === 1) {
                 return this.get(0,0);
             } else if(this.nrows == 2) {
@@ -250,7 +353,10 @@ export namespace mat {
             }
         }
 
-        LU(): Array<Matrix> {
+        /**
+         * Returns the LU decomposition of the Matrix, as an array of two matrix [L, U]
+         */
+        LU(): Matrix[] {
             assert(this.nrows === this.ncols, "Matrix must be square");
             let size: number = this.nrows;
 
@@ -288,6 +394,10 @@ export namespace mat {
             return [L, U];
         }
 
+        /**
+         * Removes rowIndex-th row from the matrix
+         * @param rowIndex
+         */
         deleteRow(rowIndex: number): Matrix {
             assert(rowIndex >= 0 && rowIndex < this.nrows, "Invalid row index");
 
@@ -297,6 +407,10 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Removes columnIndex-th column from the Matrix
+         * @param columnIndex
+         */
         deleteColumn(columnIndex: number): Matrix {
             assert(columnIndex >= 0 && columnIndex < this.ncols, "Invalid column index");
             let arr: number[][] = [];
@@ -312,6 +426,11 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Calculates the (i,j)-th minor matrix
+         * @param i
+         * @param j
+         */
         minor(i: number, j: number): number {
             // Create a copy of the matrix
             let matrix: Matrix = fromMatrix(this);
@@ -321,6 +440,11 @@ export namespace mat {
             return matrix.det();
         }
 
+        /**
+         * Calculates the (i,j)-th cofactor of the matrix
+         * @param i
+         * @param j
+         */
         cofactor(i: number, j: number): number {
             //return Math.pow((-1), (row + column)) * this.minor(i, j);
             assert(this.isSquare(), "Matrix is not square");
@@ -328,6 +452,9 @@ export namespace mat {
             return Math.pow(-1, i+j) * this.minor(i, j);
         }
 
+        /**
+         * Calculates the matrix of cofactors
+         */
         cof(): Matrix {
             // Generate an empty matrix
             let matrix: Matrix = zeros(this.nrows, this.ncols);
@@ -342,6 +469,13 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Returns a smaller sub-matrix constructed from the element of the original Matrix.
+         * @param starrow: Starting row
+         * @param endrow: Ending row
+         * @param startcol: Starting column
+         * @param endcol: Ending column
+         */
         submat(starrow: number, endrow: number, startcol: number, endcol: number): Matrix {
             let rows: number = (endrow - starrow) + 1;
             let columns: number = (endcol - startcol) + 1;
@@ -363,18 +497,28 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Computes the adjoint matrix
+         */
         adj(): Matrix {
             return this.cof().T;
         }
 
+        /**
+         * Computes the inverse of the matrix
+         */
         inv(): Matrix {
-            // inverse
+            // Check that matrix is square
             assert(this.isSquare(), "Matrix must be square");
+            // Check that matrix is not singular
             assert(!this.isSingular(), "Matrix is singular");
 
             return this.adj().multiply(1.0 / this.det());
         }
 
+        /**
+         * Returns the matrix transposed
+         */
         transpose(): Matrix {
             let transposed: Matrix = zeros(this.ncols, this.nrows);
             for(let i = 0; i < this.nrows; i++) {
@@ -386,10 +530,16 @@ export namespace mat {
             return transposed;
         }
 
+        /**
+         * To be used like numpy .T property. Return the transpose of the matrix
+         */
         get T(): Matrix {
             return this.transpose();
         }
 
+        /**
+         * Returns a copy of the matrix but with all elements positive
+         */
         abs(): Matrix {
             // Return the same matrix but with all positive values
             let matrix: Matrix = fromMatrix(this);
@@ -402,6 +552,10 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Adds a new row to the matrix at the bottom
+         * @param row: New row to be added
+         */
         addRow(row: number[]): Matrix {
             assert((row as number[]).length === this.ncols, "New row must have the same number of columns");
             this.arr.push(row);
@@ -410,6 +564,10 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Adds a new column to the matrix at the right
+         * @param column: New column to be added
+         */
         addColumn(column: number[]): Matrix {
             assert((column as number[]).length === this.nrows, "New column must have the same number of rows");
             for(let i = 0; i < this.nrows; i++) {
@@ -421,6 +579,10 @@ export namespace mat {
             return this;
         }
 
+        /**
+         * Concatenates the new matrix at the right of the current matrix
+         * @param M: Matrix to be concatenated
+         */
         horzcat(M: Matrix): Matrix {
             assert(this.nrows === M.nrows, "Both matrices must have the same number of rows for horizontal concatenation");
 
@@ -434,6 +596,10 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Concatenates the new matrix at the bottom of the current matrix
+         * @param M: Matrix to be concatenated
+         */
         vertcat(M: Matrix): Matrix {
             assert(this.ncols === M.ncols, "Both matrices must have the same number of columns for vertical concatenation");
 
@@ -447,36 +613,54 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Simple but efficient way to compare if two matrices are equal
+         * @param M: Matrix to be compared with
+         */
         equals(M: Matrix): boolean {
             return JSON.stringify(this) === JSON.stringify(M);
         }
 
+        /**
+         * Applies a given function to each element in the matrix
+         * @param callback: Function to be applied to each element
+         */
         map(callback: (x: number) => number): Matrix {
-            let arr = [...this.arr];
+            let arr: number[][] = [...this.arr];
             for(let i = 0; i < this.nrows; i++) {
                 for(let j = 0; j < this.ncols; j++) {
-                    // @ts-ignore
-                    arr[i][j] = callback(arr[i][j]);
+                    //arr[i][j] = callback(arr[i][j]);
+                    this.set(i, j, callback(this.get(i,j)));
                 }
             }
             this.arr = arr;
             return this;
         }
 
+        /**
+         * Same as map(), applies a given function to each element in the matrix
+         * @param callback: Function
+         */
         apply(callback: (x: number) => number): Matrix {
             this.map(callback);
             return this;
         }
 
+        /**
+         * Reshapes the matrix to a new shape, if possible
+         * @param shape. New shape
+         */
         reshape(shape: number[]): Matrix {
             assert(Array.isArray(shape), "Invalid shape");
             assert(shape.length > 1, "New shape must contain at least 2 dimensions");
+            assert(shape.every(item => item > 0), "Invalid shape");
+            assert(shape[0]*shape[1] === this.size(), "Invalid shape");
 
             // Check if shape is valid
             let expectedNElements: number = shape.reduce((total, dim) => total = total * dim, 1);
             let nElements: number = this.shape[0] * this.shape[1];
 
-            assert(nElements === expectedNElements, "New shape is impossible");
+            //assert(nElements === expectedNElements, "New shape is impossible");
 
             // First, put all elements from this matrix into a vector/flattened matrix
             let flattened: Matrix = this.flatten();
@@ -493,6 +677,9 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Flattens the matrix to a new Matrix with 1 row and this.size() columns
+         */
         flatten(): Matrix {
             // Create new matrix of 1 row and N columns where N is equal to the number of elements in the matrix
             let matrix: Matrix = zeros(1, this.size());
@@ -507,10 +694,16 @@ export namespace mat {
             return matrix;
         }
 
+        /**
+         * Same as flatten()
+         */
         ravel(): Matrix {
             return this.flatten();
         }
 
+        /**
+         * Extracts the diagonal of the matrix and returns it in a 1D array
+         */
         diag(): number[] {
             // Return an array with the diagonal elements
             let diagonal: number[] = [];
@@ -522,6 +715,9 @@ export namespace mat {
 
         }
 
+        /**
+         * Returns the max value in the matrix
+         */
         max(): number {
             if(this.nrows === 1) {
                 return Math.max(...(this.arr[0] as number[]));
@@ -537,6 +733,9 @@ export namespace mat {
             return max_val;
         }
 
+        /**
+         * Computes and returns the Frobenius norm of the matrix
+         */
         norm(): number {
             // Returns the Frobenius norm of the matrix
             let norm: number = 0.0;
@@ -549,6 +748,10 @@ export namespace mat {
             return Math.sqrt(norm);
         }
 
+        /**
+         * Returns a generator(iterator) containing all rows as 1D-array of Matrix
+         * @param as_matrix: If true, the returned rows will be Matrix objects
+         */
         *iterrows(as_matrix = false) {
             for(let i = 0; i < this.nrows; i++) {
                 let row: number[] | Matrix = this.getRow(i);
@@ -559,6 +762,10 @@ export namespace mat {
             }
         }
 
+        /**
+         * Returns a generator(iterator) containing all columns as 1D-array of Matrix
+         * @param as_matrix: If true, the returned columns will be Matrix objects
+         */
         *itercolumns(as_matrix = false) {
             for(let i = 0; i < this.ncols; i++) {
                 let column: number | number[] | Matrix = this.getColumn(i);
@@ -569,6 +776,9 @@ export namespace mat {
             }
         }
 
+        /**
+         * Returns a generator(iterator) containing all elements of the Matrix
+         */
         *iter(): Generator<number> {
             // Return an iterator that iterates through all elements in the matrix
             for(let i = 0; i < this.nrows; i++) {
@@ -578,6 +788,12 @@ export namespace mat {
             }
         }
     }
+
+    /**
+     * Static method that creates a Matrix of random numbers
+     * @param rows: Number of rows
+     * @param columns: Number of  columns
+     */
     export function rand(rows: number, columns: number): Matrix {
         // Create empty array
         let arr: number[][] = [];
@@ -591,10 +807,18 @@ export namespace mat {
         return fromArray(arr);
     }
 
+    /**
+     * Returns an empty matrix of size (0,0)
+     */
     export function empty() {
         return zeros(0,0);
     }
 
+    /**
+     * Returns a Matrix filled with zeros
+     * @param rows: Number of rows
+     * @param columns: Number of columns
+     */
     export function zeros(rows: number, columns: number): Matrix {
         let matrix: Matrix = new Matrix(null);
         matrix.nrows = rows;
@@ -609,6 +833,11 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Returns a Matrix filled with ones
+     * @param rows: Number of rows
+     * @param columns: Number of columns
+     */
     export function ones(rows: number, columns: number): Matrix {
         // create a matrix of zeros
         let matrix: Matrix = zeros(rows, columns);
@@ -622,8 +851,20 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Creates a new matrix from a 2D-array of numbers
+     * @param arr: 2D array of numbers
+     */
     export function fromArray(arr: number[][]): Matrix {
+        // Check that given argument is an array
         assert(Array.isArray(arr), "Argument must be of array type");
+        // Check that given argument is a 2D array
+        assert(arr.every(item => Array.isArray(item)), "Argument must be a 2D array.");
+        // Check that all rows have the same length
+        let rows_length = arr[0].length;
+        assert(arr.every(item => item.length === rows_length, "All rows in the given 2D array must have the same length."));
+        // Check that all elements in the array are numbers
+        assert(arr.every(item => typeof(item) === 'number'), "All elements in the array must be numbers.");
 
         // get size
         let rows: number = arr.length;
@@ -638,6 +879,10 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Creates a new matrix from a Matrix object
+     * @param m: Matrix
+     */
     export function fromMatrix(m: Matrix): Matrix{
         // get size of matrix
         let rows: number = m.nrows;
@@ -656,6 +901,10 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Static method that computes the Frobenius norm of the matrix
+     * @param M: Matrix
+     */
     export function norm(M: Matrix): number {
         // Returns the Frobenius norm of the matrix
         let norm: number = 0.0;
@@ -668,6 +917,12 @@ export namespace mat {
         return Math.sqrt(norm);
     }
 
+    /**
+     * Returns a Matrix of 1-row with a range of values
+     * @param start: Starting number
+     * @param end: Ending number
+     * @param step: Step size
+     */
     export function arange(start: number, end: number, step: number): Matrix {
         assert(start > 0 && end > 0, "Invalid range");
         assert(end > start, "Invalid range");
@@ -683,6 +938,12 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Returns a Matrix of 1-row with N elements given a range of values
+     * @param start: Starting number
+     * @param end: Ending number
+     * @param N: Number of elements
+     */
     export function linspace(start: number, end: number, N: number): Matrix {
         assert(end > start, "Invalid range");
         assert(N > 0, "Invalid number of elements");
@@ -699,6 +960,10 @@ export namespace mat {
         return matrix;
     }
 
+    /**
+     * Returns an identity matrix of given size
+     * @param size: number
+     */
     export function eye(size: number): Matrix {
         assert(typeof(size) === 'number' && size > 0, "Param argument must be a positive number");
 
@@ -713,10 +978,19 @@ export namespace mat {
         return matrix;
     }
 
-    export function row_kmatmul(row: number | number[], k: number): number[] {
-        return (row as number[]).map(x => (x as number) * k);
+    /**
+     * Performs scalar multiplication for a given row and returns it as a 1D array
+     * @param row: 1D array of numbers
+     * @param k: Scalar/multiplier
+     */
+    export function row_kmatmul(row: number[], k: number): number[] {
+        return row.map(x => (x as number) * k);
     }
 
+    /**
+     * Construct a Matrix filled with zeros except its diagonal, which contains the given elements
+     * @param vector: 2D array or Matrix
+     */
     export function diag(vector: number[][] | Matrix) {
         // Accept vectors with only 1 row
         if(Array.isArray(vector)) {
