@@ -151,6 +151,20 @@ export namespace mat {
         }
 
         /**
+         * Performs dot product a.*b of two arrays/matrix
+         *  - If a and b are 1-D arrays, it is inner product of vectors
+         *  - If both a and b are 2D arrays, it is matrix multiplication
+         * @param M
+         */
+        dot(M: Matrix): Matrix {
+            if(this.ndims === 1 && M.ndims === 1) { // vectors
+                return inner_prod(this, M);
+            } else {
+                return this.multiply(M);
+            }
+        }
+
+        /**
          * Performs matrix addition
          * @param M: Matrix object
          */
@@ -315,6 +329,14 @@ export namespace mat {
          */
         get shape(): number[] {
             return [this.nrows, this.ncols];
+        }
+
+        /**
+         * Returns the number of dimensions in the Matrix
+         */
+        get ndims() {
+            let is_flat: boolean = this.nrows === 1 || this.ncols === 1;
+            return is_flat ? 1 : 2;
         }
 
         /**
@@ -1012,6 +1034,13 @@ export namespace mat {
         }
 
         return M;
+    }
+    function inner_prod(a: Matrix, b: Matrix) {
+        let a_shape = a.shape;
+        let b_shape = [a_shape[1], a_shape[0]];
+        b = b.reshape(b_shape);
+
+        return a.multiply(b);
     }
 }
 
