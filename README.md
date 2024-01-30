@@ -214,5 +214,6 @@ And more matrix operations including:
 # Examples
 * [Solve a system of linear equations using Least Squares method](https://github.com/edumntg/js-mat/blob/main/examples/least_squares.ts)
 * [Find the roots of a system of equations using Newton-Raphson method](https://github.com/edumntg/js-mat/blob/main/examples/newton_raphson.ts)
+* [Perform Linear Regression method](https://github.com/edumntg/js-mat/blob/main/examples/linear_regression.ts)
 
 Note: There are a lot more examples. but we highlights the ones that implements a lot of the functionalities mentioned above

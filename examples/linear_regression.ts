@@ -8,8 +8,8 @@ import {mat} from '../mat/Mat'
 let x: mat.Matrix = mat.linspace(0, 5, 100).T;
 let y: mat.Matrix = x.multiply(12.5).add(21); // 5x + 20
 
-// Initialize initial values with random values
-let w: mat.Matrix = new mat.Matrix([[2.3]]);
+// Initialize weights and bias
+let w: mat.Matrix = mat.rand(1,1);
 let b: number = -7;
 
 // Learning rate and number of epochs
@@ -41,4 +41,5 @@ for(let epoch = 0; epoch < epochs; epoch++) {
     console.log(`Epoch ${epoch+1}, loss:`, loss.as_scalar());
 }
 
+// Print solution
 console.log(w,b)
