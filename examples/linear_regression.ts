@@ -36,7 +36,7 @@ for(let epoch = 0; epoch < epochs; epoch++) {
 
     // Update values
     w = w.diff(dw.multiply(lr));
-    b -= lr*db.arr[0][0];
+    b -= lr*db.as_scalar();
 
     console.log(`Epoch ${epoch+1}, loss:`, loss.as_scalar());
 }
