@@ -10,7 +10,7 @@ let y: mat.Matrix = x.multiply(12.5).add(21); // 5x + 20
 
 // Initialize weights and bias
 let w: mat.Matrix = mat.rand(1,1);
-let b: number = -7;
+let b: number = Math.random()*20; // random number between 0 and 20
 
 // Learning rate and number of epochs
 let lr: number = 0.01;
