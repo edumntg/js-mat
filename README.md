@@ -4,31 +4,31 @@ JavaScript library for representation and mathematical operations using matrix
 # Usage
 Import the package as:
 ```
-const {Matrix} = require('js-mat');
+import {mat} from '../mat/Mat'
 ```
 Create a matrix of random values:
 ```
-var M = Matrix.rand(3,3); // create a 3x3 matrix
+var M: mat.Matrix = mat.rand(3,3); // create a 3x3 matrix
 ```
 
 Create a null matrix:
 ```
-var M = Matrix.zeros(2,5); // create a 2x5 null matrix
+var M: mat.Matrix = mat.zeros(2,5); // create a 2x5 null matrix
 ```
 
 Create a matrix of ones:
 ```
-var M = Matrix.ones(2,2) // create a 2x2 matrix of ones
+var M: mat.Matrix = mat.ones(2,2) // create a 2x2 matrix of ones
 ```
 
 Create an identity matrix:
 ```
-var I = Matrix.eye(4); // identity matrix of size 4x4
+var I: mat.Matrix = mat.eye(4); // identity matrix of size 4x4
 ```
 
 Create a matrix from a 2D array:
 ```
-var M = new Matrix([
+var M: mat.matrix = new mat.Matrix([
     [1,2,3],
     [4,5,6],
     [7,8,9]
@@ -37,8 +37,8 @@ var M = new Matrix([
 
 Create a matrix from another matrix
 ```
-var M1 = Matrix.rand(3,6);
-var M2 = new Matrix(M1); // equal to M1
+var M1: mat.Matrix = mat.rand(3,6);
+var M2: mat.Matrix = new mat.Matrix(M1); // equal to M1
 ```
 
 # Operations
@@ -69,7 +69,7 @@ var M2 = new Matrix([
     [-12,-2,7]
 ]);
 
-var result = M1.subs(M2);
+var result = M1.subtract(M2); // M1.diff(M2) also works
 // [15.6, 7.0, 3.6]
 // [17.0, 0, -4.0]
 ```
@@ -88,7 +88,7 @@ var M2 = new Matrix([
     [1, 1]
 ]);
 
-var result = M1.multiply(M2);
+var result = M1.multiply(M2); // M1.dot(M2) also works
 // [10, 34]
 // [37, 82]
 ```
@@ -142,7 +142,7 @@ var M = new Matrix([
     [-3, 1, 5, 0]
 ]);
 
-M.T(); // or also M.transpose()
+M.T; // or also M.transpose()
 // [5, 1, -3]
 // [-2, 0, 1]
 // [2, 0, 5]
@@ -212,5 +212,7 @@ And more matrix operations including:
 * diag: ```M.diag()```
 
 # Examples
-* [Solve a system of linear equations using Least Squares method](https://github.com/edumntg/matrix-npm-package/blob/main/package/examples/least_squares.js)
-* [Find the roots of a system of equations using Newton-Raphson method](https://github.com/edumntg/matrix-npm-package/blob/main/package/examples/newton_raphson.js)
+* [Solve a system of linear equations using Least Squares method](https://github.com/edumntg/js-mat/blob/main/examples/least_squares.ts)
+* [Find the roots of a system of equations using Newton-Raphson method](https://github.com/edumntg/js-mat/blob/main/examples/newton_raphson.ts)
+
+Note: There are a lot more examples. but we highlights the ones that implements a lot of the functionalities mentioned above

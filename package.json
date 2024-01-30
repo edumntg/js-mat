@@ -4,11 +4,12 @@
   "description": "JavaScript library for Matrix representation",
   "main": "index.js",
   "scripts": {
-    "test": "tsc & jest"
+    "test": "tsc & jest",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edumntg/matrix-npm-package.git"
+    "url": "git+https://github.com/edumntg/js-mat.git"
   },
   "keywords": [
     "Matrix",
@@ -22,9 +23,9 @@
   "author": "Eduardo Montilva",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/edumntg/matrix-npm-package/issues"
+    "url": "https://github.com/edumntg/js-mat/issues"
   },
-  "homepage": "https://github.com/edumntg/matrix-npm-package#readme",
+  "homepage": "https://github.com/edumntg/js-mat#readme",
   "devDependencies": {
     "@babel/core": "^7.23.9",
     "@babel/preset-env": "^7.23.9",

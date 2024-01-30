@@ -139,12 +139,14 @@ export namespace mat {
             assert(typeof(k) === 'number', "Argument must be a constant");
 
             // create a copy
-            let copy: Matrix = new Matrix(this);
+            let copy: Matrix = zeros(this.nrows, this.ncols);
 
             // Multiply
             let rows: number = copy.nrows;
-            for(let i = 0; i < rows; i++) {
-                copy.setRow(i, row_kmatmul(copy.getRow(i), k));
+            for(let i = 0; i < this.nrows; i++) {
+                for(let j = 0; j < this.ncols; j++) {
+                    copy.set(i, j, this.get(i, j)*k);
+                }
             }
 
             return copy;
@@ -157,7 +159,7 @@ export namespace mat {
          * @param M
          */
         dot(M: Matrix): Matrix {
-            if(this.ndims === 1 && M.ndims === 1) { // vectors
+            if(this.shape === M.shape && this.ndims === 1 && M.ndims === 1) { // vectors
                 return inner_prod(this, M);
             } else {
                 return this.multiply(M);
@@ -168,49 +170,39 @@ export namespace mat {
          * Performs matrix addition
          * @param M: Matrix object
          */
-        add(M: Matrix): Matrix {
-            // Check that both matrices have the same size
-            assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
+        add(M: Matrix | number): Matrix {
+            if(M instanceof Matrix) {
+                // Check that both matrices have the same size
+                assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
 
-            // Create a copy of this matrix
-            let result: Matrix = fromMatrix(M);
-
-            // Now add
-            for(let i = 0; i < this.nrows; i++) {
-                for(let j = 0; j < this.ncols; j++) {
-                    result.set(i,j, this.get(i,j) + M.get(i,j));
-                }
+                return matrix_addition(this, M);
             }
 
-            return result;
+            // If we reach this point, then M is a number
+            return scalar_addition(this, M);
         }
 
         /**
          * Performs matrix subtraction
          * @param M: Matrix object
          */
-        sub(M: Matrix): Matrix {
-            // Check that both matrices have the same size
-            assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
+        sub(M: Matrix | number): Matrix {
+            if(M instanceof Matrix) {
+                // Check that both matrices have the same size
+                assert(this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1], "Matrices must have the same shape");
 
-            // Create a copy of this matrix
-            let result: Matrix = fromMatrix(M);
-
-            // Now add
-            for(let i = 0; i < this.nrows; i++) {
-                for(let j = 0; j < this.ncols; j++) {
-                    result.set(i,j, this.get(i,j) - M.get(i,j));
-                }
+                return matrix_subtraction(this, M);
             }
 
-            return result;
+            // If we reach this point, then M is a number
+            return scalar_subtraction(this, M);
         }
 
-        subtract(M: Matrix) {
+        subtract(M: Matrix | number) {
             return this.sub(M);
         }
 
-        diff(M: Matrix): Matrix {
+        diff(M: Matrix | number): Matrix {
             return this.sub(M);
         }
 
@@ -809,6 +801,42 @@ export namespace mat {
                 }
             }
         }
+
+        /**
+         * Returns the sum of all elements in the matrix
+         */
+        sum() {
+            return sum(this);
+        }
+
+        /**
+         * Returns the mean value of all elements in the matrix
+         */
+        mean() {
+            return mean(this);
+        }
+
+        /**
+         * Returns a matrix with all elements to the power of n
+         * @param n: power
+         */
+        pow(n: number) {
+            for(let i = 0; i < this.nrows; i++) {
+                for(let j = 0; j < this.ncols; j++) {
+                    this.set(i, j, Math.pow(this.get(i, j), n))
+                }
+            }
+
+            return this;
+        }
+
+        /**
+         * Only for matrix with a single element. Returns the value inside the matrix
+         */
+        as_scalar(): number {
+            assert(this.size() === 1, "Calling scalar value only works for Matrix with 1 element");
+            return this.arr[0][0];
+        }
     }
 
     /**
@@ -886,7 +914,7 @@ export namespace mat {
         let rows_length = arr[0].length;
         assert(arr.every(item => item.length === rows_length, "All rows in the given 2D array must have the same length."));
         // Check that all elements in the array are numbers
-        assert(arr.every(item => typeof(item) === 'number'), "All elements in the array must be numbers.");
+        assert(arr.every(item => item.every(x => typeof(x) === 'number')), "All elements in the array must be numbers.");
 
         // get size
         let rows: number = arr.length;
@@ -1035,12 +1063,127 @@ export namespace mat {
 
         return M;
     }
-    function inner_prod(a: Matrix, b: Matrix) {
+    function inner_prod(a: Matrix, b: Matrix): Matrix {
         let a_shape = a.shape;
-        let b_shape = [a_shape[1], a_shape[0]];
-        b = b.reshape(b_shape);
+        b = b.reshape(a_shape);
 
-        return a.multiply(b);
+        let result: number = 0.0;
+        for(let i = 0; i < a_shape[0]; i++) {
+            for(let j = 0; j < a.shape[1]; j++) {
+                result += a.get(i,j)*b.get(i,j);
+            }
+        }
+
+        return new Matrix([[result]]);
+    }
+
+    /**
+     * Performs addition between two Matrix
+     * @param a: Matrix
+     * @param b: Matrix
+     * @private
+     */
+    function matrix_addition(a: Matrix, b: Matrix): Matrix {
+        // Check that both matrices have the same size
+        assert(a.shape[0] === b.shape[0] && a.shape[1] === b.shape[1], "Matrices must have the same shape");
+
+        // Create a copy of this matrix
+        let result: Matrix = fromMatrix(b);
+
+        // Now add
+        for(let i = 0; i < a.nrows; i++) {
+            for(let j = 0; j < a.ncols; j++) {
+                result.set(i,j, a.get(i,j) + b.get(i,j));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Performs addition between a matrix and a scalar value
+     * @param a: Matrix
+     * @param b: Scalar
+     * @private
+     */
+    function scalar_addition(a: Matrix, b: number): Matrix {
+        // Create a copy of current matrix
+        let result: Matrix = fromMatrix(a);
+
+        // Now add the scalar to each element
+        for(let i = 0; i < result.nrows; i++) {
+            for(let j = 0; j < result.ncols; j++) {
+                result.set(i, j, result.get(i, j) + b);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Performs subtraction between two Matrix
+     * @param a: Matrix
+     * @param b: Matrix
+     * @private
+     */
+    function matrix_subtraction(a: Matrix, b: Matrix): Matrix {
+        // Check that both matrices have the same size
+        assert(a.shape[0] === b.shape[0] && a.shape[1] === b.shape[1], "Matrices must have the same shape");
+
+        // Create a copy of this matrix
+        let result: Matrix = zeros(a.shape[0], a.shape[1]);
+
+        // Now add
+        for(let i = 0; i < a.nrows; i++) {
+            for(let j = 0; j < a.ncols; j++) {
+                result.set(i,j, a.get(i,j) - b.get(i,j));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Performs subtraction between a matrix and a scalar value
+     * @param a: Matrix
+     * @param b: Scalar
+     * @private
+     */
+    function scalar_subtraction(a: Matrix, b: number): Matrix {
+        // Create a copy of current matrix
+        let result: Matrix = fromMatrix(a);
+
+        // Now add the scalar to each element
+        for(let i = 0; i < result.nrows; i++) {
+            for(let j = 0; j < result.ncols; j++) {
+                result.set(i, j, result.get(i, j) - b);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Sums all elements in the matrix
+     * @param a
+     */
+    export function sum(a: Matrix): Matrix {
+        let result: number = 0.0;
+        for(let i = 0; i < a.nrows; i++) {
+            for(let j = 0; j < a.ncols; j++) {
+                result += a.get(i,j);
+            }
+        }
+
+        return new Matrix([[result]]);
+    }
+
+    /**
+     * Calculates the mean value between all elements in the matrix
+     * @param a
+     */
+    export function mean(a: Matrix): Matrix {
+        return sum(a).multiply(1.0 / a.size());
     }
 }
 

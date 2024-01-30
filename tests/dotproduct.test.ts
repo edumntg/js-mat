@@ -1,6 +1,6 @@
 import {mat} from '../mat/Mat'
 
-describe('Testing matrix multiplication functionality', () => {
+describe('Testing matrix dot-product functionality', () => {
     let M1: mat.Matrix;
     let M2: mat.Matrix;
     let M3: mat.Matrix;
