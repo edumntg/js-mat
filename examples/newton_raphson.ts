@@ -45,7 +45,7 @@ while(err > eps && n < max_iters) {
     let Xnew: mat.Matrix = Xold.sub(delta);
 
     // Append new values to solutions vector
-    X = X.horzcat(Xnew);
+    X = mat.horzcat(X, Xnew);
 
     // Calculate new error. Error is equal to the max. value in the change vector
     err = delta.abs().max();

@@ -1,4 +1,5 @@
 import {strict as assert} from 'assert';
+import {readFileSync} from 'fs';
 
 export namespace mat {
 
@@ -45,7 +46,7 @@ export namespace mat {
          */
         private construct_fromMatrix(m: Matrix): Matrix {
 
-            this.arr = m.arr.slice();
+            this.arr = [...m.arr];
             this.nrows = m.nrows;
             this.ncols = m.ncols;
             return this;
@@ -66,7 +67,7 @@ export namespace mat {
             let rows: number = arr.length;
             let columns: number = Array.isArray(arr[0]) ? arr[0].length : 1;
 
-            this.arr = arr.slice();
+            this.arr = [...arr];
             this.nrows = rows;
             this.ncols = columns;
 
@@ -99,6 +100,24 @@ export namespace mat {
             } else {
                 throw new Error("Parameter given for multiplication is invalid.");
             }
+        }
+
+        /**
+         * Applies linear multiplication between elements in both matrix
+         * e.g: result[0,0] = a[0,0]*b[0,0]
+         * @param multiplier
+         */
+        linmul(M: Matrix): Matrix {
+            assert(M.shape[0] === this.shape[0] && M.shape[1] === this.shape[1], "Matrices must have same size");
+
+            let matrix: Matrix = fromMatrix(this);
+            for(let i = 0; i < this.nrows; i++) {
+                for(let j = 0; j < this.ncols;  j++) {
+                    matrix.set(i, j, matrix.get(i,j)*M.get(i,j));
+                }
+            }
+
+            return matrix;
         }
 
         /**
@@ -159,7 +178,11 @@ export namespace mat {
          * @param M
          */
         dot(M: Matrix): Matrix {
-            if(this.shape === M.shape && this.ndims === 1 && M.ndims === 1) { // vectors
+            if(
+                (this.shape[0] === M.shape[0] && this.shape[1] === M.shape[1]) &&
+                this.ndims === 1 &&
+                M.ndims === 1)
+            { // vectors
                 return inner_prod(this, M);
             } else {
                 return this.multiply(M);
@@ -235,9 +258,7 @@ export namespace mat {
             assert(this.ncols === row.length, "New row must have the same number of columns")
 
             // set row
-            for(let i = 0; i < this.ncols; i++) {
-                this.set(rowIndex, i, row[i]);
-            }
+            this.arr[rowIndex] = row;
 
             return this;
         }
@@ -593,39 +614,7 @@ export namespace mat {
             return this;
         }
 
-        /**
-         * Concatenates the new matrix at the right of the current matrix
-         * @param M: Matrix to be concatenated
-         */
-        horzcat(M: Matrix): Matrix {
-            assert(this.nrows === M.nrows, "Both matrices must have the same number of rows for horizontal concatenation");
 
-            // Create a copy of the current matrix
-            let matrix: Matrix = fromMatrix(this);
-            // Now add the columns of the other matrix
-            for(let i = 0; i < M.ncols; i++) {
-                matrix.addColumn(M.getColumn(i));
-            }
-
-            return matrix;
-        }
-
-        /**
-         * Concatenates the new matrix at the bottom of the current matrix
-         * @param M: Matrix to be concatenated
-         */
-        vertcat(M: Matrix): Matrix {
-            assert(this.ncols === M.ncols, "Both matrices must have the same number of columns for vertical concatenation");
-
-            // Create a copy of the current matrix
-            let matrix: Matrix = fromMatrix(this);
-            // Now add the rows of the other matrix
-            for(let i = 0; i < M.nrows; i++) {
-                matrix.addRow(M.getRow(i));
-            }
-
-            return matrix;
-        }
 
         /**
          * Simple but efficient way to compare if two matrices are equal
@@ -640,15 +629,16 @@ export namespace mat {
          * @param callback: Function to be applied to each element
          */
         map(callback: (x: number) => number): Matrix {
-            let arr: number[][] = [...this.arr];
+
+            // Create a new copy matrix
+            let matrix: Matrix = fromMatrix(this);
             for(let i = 0; i < this.nrows; i++) {
                 for(let j = 0; j < this.ncols; j++) {
                     //arr[i][j] = callback(arr[i][j]);
-                    this.set(i, j, callback(this.get(i,j)));
+                    matrix.set(i, j, callback(matrix.get(i, j)));
                 }
             }
-            this.arr = arr;
-            return this;
+            return matrix;
         }
 
         /**
@@ -837,6 +827,43 @@ export namespace mat {
             assert(this.size() === 1, "Calling scalar value only works for Matrix with 1 element");
             return this.arr[0][0];
         }
+
+        /**
+         * Returns the matrix with all elements multiplied by -1
+         */
+        neg(): mat.Matrix {
+            let matrix: mat.Matrix = fromMatrix(this);
+            matrix.apply((x: number) => {
+                return -1.0*x;
+            });
+            return matrix;
+        }
+
+        /**
+         * Shuffles the rows/columns in the array
+         * if axis = 0, shuffles the rows
+         * if axis = 1, shuffles the columns
+         */
+        shuffle(axis = 0): Matrix {
+            for(let i = 0; i < this.nrows; i++) {
+                let j: number = Math.floor(Math.random()*(i+1));
+                let temp: number[] = this.arr[i];
+                this.arr[i] = this.arr[j];
+                this.arr[j] = temp;
+            }
+
+            return this;
+        }
+
+        /**
+         * The following function converts all NaN values in the matrix to 'n'
+         * @param n: number
+         */
+        nanto(n: number): Matrix {
+            this.arr = this.arr.map(row => row.map(x => isNaN(x) ? 0 : x));
+
+            return this;
+        }
     }
 
     /**
@@ -877,7 +904,7 @@ export namespace mat {
         let row: Array<number> = new Array(columns).fill(0);
 
         for(let i = 0; i < rows; i++) {
-            matrix.arr.push(row.slice())
+            matrix.arr.push([...row]);
         }
 
         return matrix;
@@ -949,22 +976,6 @@ export namespace mat {
         }
 
         return matrix;
-    }
-
-    /**
-     * Static method that computes the Frobenius norm of the matrix
-     * @param M: Matrix
-     */
-    export function norm(M: Matrix): number {
-        // Returns the Frobenius norm of the matrix
-        let norm: number = 0.0;
-        for(let i = 0; i < M.shape[0]; i++) {
-            for(let j = 0; j < M.shape[1]; j++) {
-                norm += Math.pow(Math.abs(M.get(i,j)), 2.0)
-            }
-        }
-
-        return Math.sqrt(norm);
     }
 
     /**
@@ -1184,6 +1195,91 @@ export namespace mat {
      */
     export function mean(a: Matrix): Matrix {
         return sum(a).multiply(1.0 / a.size());
+    }
+
+    /**
+     * Concatenates the new matrix at the right of the current matrix
+     * @param M: Matrix to be concatenated
+     */
+    export function horzcat(a: Matrix, b: Matrix): Matrix {
+        assert(a.nrows === b.nrows, "Both matrices must have the same number of rows for horizontal concatenation");
+
+        // Create a copy of the current matrix
+        let matrix: Matrix = fromMatrix(a);
+        // Now add the columns of the other matrix
+        for(let i = 0; i < b.ncols; i++) {
+            matrix.addColumn(b.getColumn(i));
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Concatenates the new matrix at the bottom of the current matrix
+     * @param M: Matrix to be concatenated
+     */
+    export function vertcat(a: Matrix, b: Matrix): Matrix {
+        assert(a.ncols === b.ncols, "Both matrices must have the same number of columns for vertical concatenation");
+
+        // Create a copy of the current matrix
+        let matrix: Matrix = fromMatrix(a);
+        // Now add the rows of the other matrix
+        for(let i = 0; i < b.nrows; i++) {
+            matrix.addRow(b.getRow(i));
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Computes the ln(x) of each element in the matrix
+     */
+    export function log(M: mat.Matrix): Matrix {
+        let matrix: Matrix = fromMatrix(M);
+        matrix = matrix.apply((x: number) => {
+            return Math.log(x);
+        });
+
+        return matrix;
+    }
+
+    export function load_txt(
+        filename: string,
+        delimiter: string = ',',
+        header = false
+    ): string[][] {
+        let data = readFileSync(filename,  'utf-8');
+
+        // Split by lines
+        let rows: string[] = data.split('\n');
+
+        // If not header, remove first row
+        if(!header) {
+            rows = rows.slice(1);
+        }
+
+        // Now, split each row by delimiter
+        let all_data: string[][] = rows.map(row => row.split(delimiter));
+
+        return all_data;
+    }
+
+    export namespace linalg {
+        /**
+         * Static method that computes the Frobenius norm of the matrix
+         * @param M: Matrix
+         */
+        export function norm(M: Matrix): number {
+            // Returns the Frobenius norm of the matrix
+            let norm: number = 0.0;
+            for(let i = 0; i < M.shape[0]; i++) {
+                for(let j = 0; j < M.shape[1]; j++) {
+                    norm += Math.pow(Math.abs(M.get(i,j)), 2.0)
+                }
+            }
+
+            return Math.sqrt(norm);
+        }
     }
 }
 
