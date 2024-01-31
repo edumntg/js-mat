@@ -1351,6 +1351,15 @@ export namespace mat {
 
         return matrix;
     }
+
+    /**
+     * Creates a new matrix with given size
+     * @param nrows: If it is a number, it is assumed as number of rows. If it is an array, it is assumed as an array of 2 elements containing the shape
+     * @param ncols: Number of columns
+     */
+    export function matrix(data: number[][]): Matrix {
+        return fromArray(data);
+    }
 }
 
 
