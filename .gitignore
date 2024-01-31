@@ -2,5 +2,4 @@ node_modules/
 .idea/
 /examples/*.js
 /tests/*.js
-/mat/*.js
 index.js
