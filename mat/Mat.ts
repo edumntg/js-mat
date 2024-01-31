@@ -46,9 +46,10 @@ export namespace mat {
          */
         private construct_fromMatrix(m: Matrix): Matrix {
 
-            this.arr = [...m.arr];
-            this.nrows = m.nrows;
-            this.ncols = m.ncols;
+            let copy: Matrix = m.copy();
+            this.arr = copy.arr;
+            this.nrows = copy.nrows;
+            this.ncols = copy.ncols;
             return this;
         }
 
@@ -67,7 +68,7 @@ export namespace mat {
             let rows: number = arr.length;
             let columns: number = Array.isArray(arr[0]) ? arr[0].length : 1;
 
-            this.arr = [...arr];
+            this.arr = JSON.parse(JSON.stringify(arr));
             this.nrows = rows;
             this.ncols = columns;
 
@@ -110,7 +111,7 @@ export namespace mat {
         linmul(M: Matrix): Matrix {
             assert(M.shape[0] === this.shape[0] && M.shape[1] === this.shape[1], "Matrices must have same size");
 
-            let matrix: Matrix = fromMatrix(this);
+            let matrix: Matrix = this.copy();
             for(let i = 0; i < this.nrows; i++) {
                 for(let j = 0; j < this.ncols;  j++) {
                     matrix.set(i, j, matrix.get(i,j)*M.get(i,j));
@@ -468,7 +469,7 @@ export namespace mat {
          */
         minor(i: number, j: number): number {
             // Create a copy of the matrix
-            let matrix: Matrix = fromMatrix(this);
+            let matrix: Matrix = this.copy();
             // Delete the given row and column
             matrix.deleteRow(i);
             matrix.deleteColumn(j);
@@ -577,7 +578,7 @@ export namespace mat {
          */
         abs(): Matrix {
             // Return the same matrix but with all positive values
-            let matrix: Matrix = fromMatrix(this);
+            let matrix: Matrix = this.copy();
 
             for(let i = 0; i < this.nrows; i++) {
                 for(let j = 0; j < this.ncols; j++) {
@@ -631,7 +632,7 @@ export namespace mat {
         map(callback: (x: number) => number): Matrix {
 
             // Create a new copy matrix
-            let matrix: Matrix = fromMatrix(this);
+            let matrix: Matrix = this.copy();
             for(let i = 0; i < this.nrows; i++) {
                 for(let j = 0; j < this.ncols; j++) {
                     //arr[i][j] = callback(arr[i][j]);
@@ -832,7 +833,7 @@ export namespace mat {
          * Returns the matrix with all elements multiplied by -1
          */
         neg(): mat.Matrix {
-            let matrix: mat.Matrix = fromMatrix(this);
+            let matrix: mat.Matrix = this.copy();
             matrix.apply((x: number) => {
                 return -1.0*x;
             });
@@ -863,6 +864,19 @@ export namespace mat {
             this.arr = this.arr.map(row => row.map(x => isNaN(x) ? 0 : x));
 
             return this;
+        }
+
+        /**
+         * Returns a deep copy of current matrix
+         */
+        copy(): Matrix {
+            // Create an empty matrix
+            let matrix: Matrix = new Matrix(null);
+            matrix.arr = JSON.parse(JSON.stringify(this.arr));
+            matrix.nrows = this.nrows;
+            matrix.ncols = this.ncols;
+
+            return matrix;
         }
     }
 
@@ -949,7 +963,7 @@ export namespace mat {
 
         // Now, create a new matrix and set parameters
         let matrix: Matrix = new Matrix(null);
-        matrix.arr = arr;
+        matrix.arr = JSON.parse(JSON.stringify(arr));
         matrix.nrows = rows;
         matrix.ncols = columns;
 
@@ -1099,7 +1113,7 @@ export namespace mat {
         assert(a.shape[0] === b.shape[0] && a.shape[1] === b.shape[1], "Matrices must have the same shape");
 
         // Create a copy of this matrix
-        let result: Matrix = fromMatrix(b);
+        let result: Matrix = b.copy();
 
         // Now add
         for(let i = 0; i < a.nrows; i++) {
@@ -1119,7 +1133,7 @@ export namespace mat {
      */
     function scalar_addition(a: Matrix, b: number): Matrix {
         // Create a copy of current matrix
-        let result: Matrix = fromMatrix(a);
+        let result: Matrix = a.copy();
 
         // Now add the scalar to each element
         for(let i = 0; i < result.nrows; i++) {
@@ -1162,7 +1176,7 @@ export namespace mat {
      */
     function scalar_subtraction(a: Matrix, b: number): Matrix {
         // Create a copy of current matrix
-        let result: Matrix = fromMatrix(a);
+        let result: Matrix = a.copy();
 
         // Now add the scalar to each element
         for(let i = 0; i < result.nrows; i++) {
@@ -1190,11 +1204,57 @@ export namespace mat {
     }
 
     /**
+     * Computes the mean for each row in the matrix.
+     * Returns a column-vector/matrix
+     * @param M: Matrix
+     */
+    export function row_mean(M: Matrix): Matrix {
+        // Create a new matrix with size (m,1) where m is the number of rows in M
+        let matrix: Matrix = mat.zeros(M.nrows, 1);
+
+        // Now, assign the means
+        let rmean: number;
+        let i: number = 0;
+        for(let row of M.iterrows(true)) {
+            row = (row as Matrix);
+            rmean = row.sum().as_scalar() / row.size();
+            matrix.set(i, 0, rmean);
+        }
+
+        return matrix;
+    }
+
+    /**
+     * Computes the mean for each column in the matrix.
+     * Returns a row-vector/matrix
+     * @param M: Matrix
+     */
+    export function column_mean(M: Matrix): Matrix {
+        // Create a new matrix with size (1,n) where n is the number of columns in M
+        let matrix: Matrix = mat.zeros(1, M.ncols);
+
+        // Now, assign the means
+        let cmean: number;
+        let i: number = 0;
+        for(let column of M.itercolumns(true)) {
+            column = (column as Matrix);
+            cmean = column.sum().as_scalar() / column.size();
+            matrix.set(0, i, cmean);
+        }
+
+        return matrix;
+    }
+
+    /**
      * Calculates the mean value between all elements in the matrix
      * @param a
      */
-    export function mean(a: Matrix): Matrix {
-        return sum(a).multiply(1.0 / a.size());
+    export function mean(M: Matrix, axis: number = 0): Matrix {
+        if(axis === 0) { // return column mean
+            return column_mean(M);
+        } else {
+            return row_mean(M);
+        }
     }
 
     /**
@@ -1205,7 +1265,7 @@ export namespace mat {
         assert(a.nrows === b.nrows, "Both matrices must have the same number of rows for horizontal concatenation");
 
         // Create a copy of the current matrix
-        let matrix: Matrix = fromMatrix(a);
+        let matrix: Matrix = a.copy();
         // Now add the columns of the other matrix
         for(let i = 0; i < b.ncols; i++) {
             matrix.addColumn(b.getColumn(i));
@@ -1222,7 +1282,7 @@ export namespace mat {
         assert(a.ncols === b.ncols, "Both matrices must have the same number of columns for vertical concatenation");
 
         // Create a copy of the current matrix
-        let matrix: Matrix = fromMatrix(a);
+        let matrix: Matrix = a.copy();
         // Now add the rows of the other matrix
         for(let i = 0; i < b.nrows; i++) {
             matrix.addRow(b.getRow(i));
@@ -1235,7 +1295,7 @@ export namespace mat {
      * Computes the ln(x) of each element in the matrix
      */
     export function log(M: mat.Matrix): Matrix {
-        let matrix: Matrix = fromMatrix(M);
+        let matrix: Matrix = M.copy();
         matrix = matrix.apply((x: number) => {
             return Math.log(x);
         });
@@ -1280,6 +1340,16 @@ export namespace mat {
 
             return Math.sqrt(norm);
         }
+    }
+
+    export function copy(M: Matrix): Matrix {
+        // Create an empty matrix
+        let matrix: Matrix = new Matrix(null);
+        matrix.arr = JSON.parse(JSON.stringify(M.arr));
+        matrix.nrows = M.nrows;
+        matrix.ncols = M.ncols;
+
+        return matrix;
     }
 }
 
