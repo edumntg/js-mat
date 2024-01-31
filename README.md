@@ -28,7 +28,17 @@ var I: mat.Matrix = mat.eye(4); // identity matrix of size 4x4
 
 Create a matrix from a 2D array:
 ```
+// We show you two ways of doing it
+
+// Using constructor
 var M: mat.matrix = new mat.Matrix([
+    [1,2,3],
+    [4,5,6],
+    [7,8,9]
+]);
+
+// Using the matrix function
+var M: mat.Matrix = mat.matrix([
     [1,2,3],
     [4,5,6],
     [7,8,9]
