@@ -3,31 +3,31 @@ JavaScript library for representation and mathematical operations using matrix
 
 # Usage
 Import the package as:
-```
+```javascript
 import {mat} from '../mat/Mat'
 ```
 Create a matrix of random values:
-```
+```javascript
 var M: mat.Matrix = mat.rand(3,3); // create a 3x3 matrix
 ```
 
 Create a null matrix:
-```
+```javascript
 var M: mat.Matrix = mat.zeros(2,5); // create a 2x5 null matrix
 ```
 
 Create a matrix of ones:
-```
+```javascript
 var M: mat.Matrix = mat.ones(2,2) // create a 2x2 matrix of ones
 ```
 
 Create an identity matrix:
-```
+```javascript
 var I: mat.Matrix = mat.eye(4); // identity matrix of size 4x4
 ```
 
 Create a matrix from a 2D array:
-```
+```javascript
 // We show you two ways of doing it
 
 // Using constructor
@@ -46,14 +46,14 @@ var M: mat.Matrix = mat.matrix([
 ```
 
 Create a matrix from another matrix
-```
+```javascript
 var M1: mat.Matrix = mat.rand(3,6);
 var M2: mat.Matrix = new mat.Matrix(M1); // equal to M1
 ```
 
 # Operations
 Addition:
-```
+```javascript
 var M1 = new Matrix([
     [12,7,9],
     [5,-2,3]
@@ -69,7 +69,7 @@ var result = M1.add(M2);
 ```
 
 Substraction:
-```
+```javascript
 var M1 = new Matrix([
     [12,7,9],
     [5,-2,3]
@@ -85,7 +85,7 @@ var result = M1.subtract(M2); // M1.diff(M2) also works
 ```
 
 Multiplication:
-```
+```javascript
 // Multiply two matrices
 var M1 = new Matrix([
     [1, 2, 9],
@@ -103,7 +103,7 @@ var result = M1.multiply(M2); // M1.dot(M2) also works
 // [37, 82]
 ```
 
-```
+```javascript
 // Multiply a matrix by a constant
 var M1 = new Matrix([
     [1, 2, 9],
@@ -116,7 +116,7 @@ var result = M1.multiply(5);
 ```
 
 Determinant:
-```
+```javascript
 var M = new Matrix([
     [5, -2, 2, 7],
     [1, 0, 0, 3],
@@ -128,7 +128,7 @@ M.det(); // returns 88
 ```
 
 Inverse:
-```
+```javascript
 var M = new Matrix([
     [5, -2, 2, 7],
     [1, 0, 0, 3],
@@ -145,7 +145,7 @@ M.inv();
 ```
 
 Transpose:
-```
+```javascript
 var M = new Matrix([
     [5, -2, 2, 7],
     [1, 0, 0, 3],
@@ -160,7 +160,7 @@ M.T; // or also M.transpose()
 ```
 
 Cofactor Matrix:
-```
+```javascript
 var M = new Matrix([
     [5, -2, 2, 7],
     [1, 0, 0, 3],
@@ -177,7 +177,7 @@ M.cof();
 ```
 
 Adjoint:
-```
+```javascript
 var M = new Matrix([
     [5, -2, 2, 7],
     [1, 0, 0, 3],
@@ -194,7 +194,7 @@ M.adj();
 ```
 
 Minor:
-```
+```javascript
 // Calculate the determinant when removing the given row and column indexes
 var M = new Matrix([
     [5, -2, 2, 7],
